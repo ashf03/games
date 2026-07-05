@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory Game</title>
+  <link rel='stylesheet' href='https://cdn.jsdelivr.net/sweetalert2/3.0.3/sweetalert2.min.css'>
+  <style>
+    :root {
+      --bg-color: #f5f5f5;
+      --card-bg: #ffffff;
+      --border-color: #e0e0e0;
+      --text-color: #333;
+      --accent-color: #333;
+      --muted-color: #666;
+      --light-bg: #f8f8f8;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #1a1a1a;
+      --card-bg: #2d2d2d;
+      --border-color: #444;
+      --text-color: #e0e0e0;
+      --accent-color: #ffffff;
+      --muted-color: #999;
+      --light-bg: #404040;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 320px;
+      margin-bottom: 10px;
+    }
+
+    .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--light-bg);
+    }
+
+    .deck {
+      width: 320px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .deck .card {
+      height: 70px;
+      width: 70px;
+      background: var(--card-bg);
+      display: inline-block;
+      margin: 0 5px 5px 0;
+      line-height: 70px;
+      font-size: 0;
+      color: var(--text-color);
+      text-align: center;
+      border-radius: 4px;
+      border: 2px solid var(--border-color);
+      vertical-align: top;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .deck .card:nth-child(4n) {
+      margin: 0 0 5px 0;
+    }
+
+    .deck .card:nth-child(n+13) {
+      margin: 0 5px 0 0;
+    }
+
+    .deck .card:nth-child(n+13):nth-child(4n) {
+      margin: 0;
+    }
+
+    .deck .card.open {
+      background: var(--light-bg);
+      border-color: var(--accent-color);
+      cursor: default;
+    }
+
+    .deck .card.show {
+      font-size: 24px;
+    }
+
+    .deck .card.match {
+      cursor: default;
+      background: var(--accent-color);
+      color: var(--card-bg);
+      font-size: 24px;
+      border-color: var(--accent-color);
+    }
+
+    .deck .card.notmatch {
+      background: var(--muted-color);
+      color: var(--card-bg);
+      border-color: var(--muted-color);
+    }
+
+    #score-panel {
+      text-align: left;
+      width: 320px;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+    }
+
+    .rating-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .rating-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      transition: background-color 0.3s ease;
+    }
+
+    .rating-dot.empty {
+      background: var(--border-color);
+    }
+
+    #score-panel .moves {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    #score-panel .restart {
+      cursor: pointer;
+      color: var(--text-color);
+      font-size: 18px;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    #score-panel .restart:hover {
+      background: var(--light-bg);
+    }
+
+    *::-moz-selection {
+      background: transparent;
+    }
+
+    *::selection {
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h2 style="margin: 0; font-size: 24px; font-weight: 600;">Memory Game</h2>
+  <button class="theme-toggle" onclick="toggleTheme()">Dark</button>
+</div>
+
+<div id="score-panel">
+  <div class="rating">
+    <div class="rating-dots">
+      <div class="rating-dot"></div>
+      <div class="rating-dot"></div>
+      <div class="rating-dot"></div>
+    </div>
+  </div>
+  <span class="moves">0</span>
+  <div class="restart">
+    ↻
+  </div>
+</div>
+<ul class="deck"></ul>
+
+<script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js'></script>
+<script src='https://cdn.jsdelivr.net/sweetalert2/3.0.3/sweetalert2.min.js'></script>
+<script>
+var symbols = ['1', '1', 'A', 'A', '2', '2', 'B', 'B', '3', '3', 'C', 'C', '4', '4', 'D', 'D'],
+    opened = [],
+    match = 0,
+    moves = 0,
+    $deck = $('.deck'),
+    $scorePanel = $('#score-panel'),
+    $moveNum = $scorePanel.find('.moves'),
+    $ratingDots = $('.rating-dot'),
+    $restart = $scorePanel.find('.restart'),
+    delay = 800,
+    gameCardsQTY = symbols.length / 2,
+    rank3stars = gameCardsQTY + 2,
+    rank2stars = gameCardsQTY + 6,
+    rank1stars = gameCardsQTY + 10;
+
+function toggleTheme() {
+  const body = document.body;
+  const themeToggle = document.querySelector('.theme-toggle');
+  
+  if (body.getAttribute('data-theme') === 'dark') {
+    body.removeAttribute('data-theme');
+    themeToggle.textContent = 'Dark';
+  } else {
+    body.setAttribute('data-theme', 'dark');
+    themeToggle.textContent = 'Light';
+  }
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+  
+  while (0 !== currentIndex) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+function initGame() {
+  var cards = shuffle(symbols);
+  $deck.empty();
+  match = 0;
+  moves = 0;
+  $moveNum.html(moves);
+  $ratingDots.removeClass('empty');
+  for (var i = 0; i < cards.length; i++) {
+    $deck.append($('<li class="card"><span>' + cards[i] + '</span></li>'))
+  }
+};
+
+function setRating(moves) {
+  var rating = 3;
+  if (moves > rank3stars && moves < rank2stars) {
+    $ratingDots.eq(2).addClass('empty');
+    rating = 2;
+  } else if (moves > rank2stars && moves < rank1stars) {
+    $ratingDots.eq(1).addClass('empty');
+    rating = 1;
+  } else if (moves > rank1stars) {
+    $ratingDots.eq(0).addClass('empty');
+    rating = 0;
+  }	
+  return { score: rating };
+};
+
+function endGame(moves, score) {
+  const theme = document.body.getAttribute('data-theme');
+  const buttonColor = theme === 'dark' ? '#ffffff' : '#333333';
+  
+  swal({
+    allowEscapeKey: false,
+    allowOutsideClick: false,
+    title: 'You Won!',
+    text: 'Completed in ' + moves + ' moves',
+    type: 'success',
+    confirmButtonColor: buttonColor,
+    confirmButtonText: 'Play Again'
+  }).then(function(isConfirm) {
+    if (isConfirm) {
+      initGame();
+    }
+  })
+}
+
+$restart.on('click', function() {
+  const theme = document.body.getAttribute('data-theme');
+  const confirmColor = theme === 'dark' ? '#ffffff' : '#333333';
+  const cancelColor = theme === 'dark' ? '#999999' : '#666666';
+  
+  swal({
+    allowEscapeKey: false,
+    allowOutsideClick: false,
+    title: 'Restart Game?',
+    text: "Your progress will be lost",
+    type: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: confirmColor,
+    cancelButtonColor: cancelColor,
+    confirmButtonText: 'Restart'
+  }).then(function(isConfirm) {
+    if (isConfirm) {
+      initGame();
+    }
+  })
+});
+
+$deck.on('click', '.card:not(".match, .open")', function() {
+  if($('.show').length > 1) { return true; }
+  
+  var $this = $(this),
+      card = $this.context.innerHTML;
+  $this.addClass('open show');
+  opened.push(card);
+
+  if (opened.length > 1) {
+    if (card === opened[0]) {
+      $deck.find('.open').addClass('match');
+      setTimeout(function() {
+        $deck.find('.match').removeClass('open show');
+      }, delay);
+      match++;
+    } else {
+      $deck.find('.open').addClass('notmatch');
+      setTimeout(function() {
+        $deck.find('.open').removeClass('open show notmatch');
+      }, delay);
+    }
+    opened = [];
+    moves++;
+    setRating(moves);
+    $moveNum.html(moves);
+  }
+  
+  if (gameCardsQTY === match) {
+    setRating(moves);
+    var score = setRating(moves).score;
+    setTimeout(function() {
+      endGame(moves, score);
+    }, 500);
+  }
+});
+
+initGame();
+</script>
+
+</body>
+</html>
